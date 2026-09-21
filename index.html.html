@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>중국어 어순 배열 게임 🐼✨</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@700&family=Nanum+Gothic+Coding:wght@700&display=swap');
+
+  :root {
+    --pink-soft: #ffe5ec;
+    --pink-main: #ff85a1;
+    --pink-deep: #f72585;
+    --purple-soft: #f3eafe;
+    --purple-main: #b5179e;
+    --mint-soft: #d8f3dc;
+    --mint-main: #52b788;
+    --yellow-soft: #fff3bf;
+    --yellow-main: #ffd166;
+    --blue-soft: #e0f2fe;
+    --text-color: #4a3e3d;
+    --white: #ffffff;
+  }
+
+  * { 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent; 
+    user-select: none;
+  }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    font-family: 'Apple SD Gothic Neo', 'Nanum Gothic Coding', sans-serif;
+    background: linear-gradient(135deg, #ffd6ff 0%, #e7c6ff 35%, #c8b6ff 70%, #b8c0ff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    color: var(--text-color);
+    overflow-y: auto;
+  }
+
+  .app-container {
+    width: 100%;
+    max-width: 440px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    border-radius: 36px;
+    box-shadow: 0 20px 40px rgba(181, 23, 158, 0.2), 0 0 0 8px rgba(255, 255, 255, 0.6);
+    padding: 24px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* 배경 장식 버블 */
+  .bg-bubble {
+    position: absolute;
+    border-radius: 50%;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .bg-bubble-1 { top: -30px; right: -30px; width: 110px; height: 110px; background: var(--pink-soft); opacity: 0.8; }
+  .bg-bubble-2 { bottom: -40px; left: -30px; width: 130px; height: 130px; background: var(--mint-soft); opacity: 0.8; }
+
+  .content { position: relative; z-index: 1; }
+
+  /* 헤더 영역 */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .app-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--purple-main);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .progress-badge {
+    font-size: 13px;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, var(--pink-main), var(--pink-deep));
+    padding: 5px 14px;
+    border-radius: 20px;
+    box-shadow: 0 3px 8px rgba(247, 37, 133, 0.3);
+  }
+
+  .student-badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 800;
+    color: #2d6a4f;
+    background: var(--mint-soft);
+    padding: 4px 12px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    border: 1px solid var(--mint-main);
+  }
+
+  /* 판다 마스코트 & 말풍선 */
+  .mascot-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 8px 0 12px;
+  }
+  .panda-avatar {
+    width: 85px;
+    height: 85px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 6px 8px rgba(0,0,0,0.1));
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .panda-avatar.happy { animation: bounce 0.6s infinite alternate; }
+  .panda-avatar.sad { animation: headShake 0.5s ease-in-out; }
+
+  @keyframes bounce {
+    0% { transform: translateY(0) scale(1); }
+    100% { transform: translateY(-10px) scale(1.05); }
+  }
+  @keyframes headShake {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    20% { transform: translateX(-6px) rotate(-5deg); }
+    40% { transform: translateX(6px) rotate(5deg); }
+    60% { transform: translateX(-4px) rotate(-3deg); }
+    80% { transform: translateX(4px) rotate(3deg); }
+  }
+
+  .speech-bubble {
+    position: relative;
+    background: #ffffff;
+    border: 3px solid var(--pink-main);
+    border-radius: 18px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-color);
+    box-shadow: 0 4px 12px rgba(255, 133, 161, 0.2);
+    flex-grow: 1;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+  }
+  .speech-bubble::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-width: 6px 12px 6px 0;
+    border-style: solid;
+    border-color: transparent var(--pink-main) transparent transparent;
+  }
+
+  /* 뜻 제시 상자 */
+  .meaning-card {
+    background: linear-gradient(135deg, #fff3bf, #ffe3e3);
+    border-radius: 22px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 14px;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.8), 0 6px 16px rgba(255, 181, 216, 0.3);
+  }
+  .meaning-sub {
+    font-size: 11px;
+    font-weight: 800;
+    color: #b5179e;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .meaning-text {
+    font-size: 18px;
+    font-weight: 900;
+    color: #3d2645;
+    line-height: 1.35;
+  }
+
+  /* 정답 입력 영역 */
+  .answer-zone {
+    min-height: 85px;
+    background: #fbf8ff;
+    border: 3px dashed #c8b6ff;
+    border-radius: 22px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    margin-bottom: 14px;
+    transition: all 0.2s ease;
+  }
+  .answer-zone.shake {
+    animation: headShake 0.4s ease-in-out;
+    border-color: #ff6b6b;
+    background: #fff0f0;
+  }
+  .placeholder-text {
+    color: #b8c0ff;
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+
+  /* 카드 칩 디자인 */
+  .word-chip {
+    padding: 8px 14px 10px;
+    border-radius: 16px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.1;
+    min-width: 50px;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+  }
+  .word-chip:active {
+    transform: translateY(3px) scale(0.96);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.1) !important;
+  }
+  .chip-hanzi {
+    font-size: 22px;
+    font-weight: 900;
+    margin-bottom: 2px;
+  }
+  .chip-pinyin {
+    font-size: 13.5px;
+    font-weight: 700;
+    opacity: 0.9;
+  }
+
+  .answer-zone .word-chip {
+    background: linear-gradient(135deg, #ff85a1, #f72585);
+    color: #ffffff;
+    box-shadow: 0 4px 0 #b5179e;
+  }
+
+  .card-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    padding: 10px 4px;
+    margin-bottom: 14px;
+    min-height: 65px;
+  }
+  .card-pool .word-chip {
+    background: linear-gradient(135deg, #74c69d, #52b788);
+    color: #ffffff;
+    box-shadow: 0 4px 0 #2d6a4f;
+  }
+  .card-pool .word-chip.used {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.3);
+  }
+
+  /* 결과 메시지 */
+  .result-msg {
+    text-align: center;
+    font-size: 15px;
+    font-weight: 800;
+    min-height: 24px;
+    margin-bottom: 10px;
+  }
+  .result-msg.correct { color: #2d6a4f; }
+  .result-msg.wrong { color: #e63946; }
+
+  /* 버튼 영역 */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+  }
+  .btn {
+    flex: 1;
+    padding: 14px 10px;
+    border: none;
+    border-radius: 18px;
+    font-size: 15.5px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn:active { transform: translateY(3px); }
+  .btn-check {
+    background: linear-gradient(135deg, #b8c0ff, #8e9aaf);
+    color: #ffffff;
+    box-shadow: 0 5px 0 #6c757d;
+  }
+  .btn-next {
+    background: linear-gradient(135deg, #ffb703, #fb8500);
+    color: #ffffff;
+    box-shadow: 0 5px 0 #d4a373;
+  }
+  .btn-next:disabled {
+    background: #e0e0e0;
+    color: #a0a0a0;
+    box-shadow: 0 5px 0 #ccc;
+    cursor: not-allowed;
+  }
+
+  /* 로그인 및 완료 화면 */
+  .screen-card {
+    text-align: center;
+    padding: 10px 4px;
+  }
+  .login-title {
+    color: var(--purple-main);
+    margin: 8px 0 4px;
+    font-size: 22px;
+    font-weight: 900;
+  }
+  .login-sub {
+    color: #7b2cbf;
+    font-size: 13px;
+    margin: 0 0 18px;
+    font-weight: 700;
+  }
+  .login-input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 18px;
+    border: 3px solid #e7c6ff;
+    background: #fff;
+    font-size: 16px; /* iOS 자동 확대 방지 */
+    font-weight: 800;
+    color: var(--text-color);
+    margin-bottom: 10px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .login-input:focus {
+    border-color: var(--purple-main);
+  }
+  .btn-start {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 18px;
+    font-size: 17px;
+    font-weight: 900;
+    cursor: pointer;
+    background: linear-gradient(135deg, #ff85a1, #f72585);
+    color: #fff;
+    box-shadow: 0 5px 0 #b5179e;
+    margin-top: 6px;
+  }
+
+  .summary-card {
+    background: linear-gradient(135deg, #fff3bf, #ffd6ff);
+    border-radius: 22px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.8);
+    text-align: left;
+  }
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(181, 23, 158, 0.2);
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .rating-badge {
+    text-align: center;
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 10px;
+    font-weight: 900;
+    color: var(--purple-main);
+    margin-top: 10px;
+    font-size: 15px;
+  }
+
+  .btn-restart {
+    background: linear-gradient(135deg, #74c69d, #52b788);
+    color: #fff;
+    box-shadow: 0 5px 0 #2d6a4f;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 18px;
+    font-size: 16px;
+    font-weight: 900;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="bg-bubble bg-bubble-1"></div>
+  <div class="bg-bubble bg-bubble-2"></div>
+
+  <!-- 로그인 화면 -->
+  <div class="screen-card" id="loginScreen">
+    <div style="width: 110px; height: 110px; margin: 0 auto;">
+      <svg viewBox="0 0 200 200" width="100%" height="100%">
+        <circle cx="45" cy="55" r="30" fill="#2b2d42"/>
+        <circle cx="155" cy="55" r="30" fill="#2b2d42"/>
+        <circle cx="45" cy="55" r="16" fill="#ffb703"/>
+        <circle cx="155" cy="55" r="16" fill="#ffb703"/>
+        <circle cx="100" cy="115" r="75" fill="#ffffff" stroke="#2b2d42" stroke-width="6"/>
+        <ellipse cx="65" cy="110" rx="20" ry="25" fill="#2b2d42" transform="rotate(-15 65 110)"/>
+        <ellipse cx="135" cy="110" rx="20" ry="25" fill="#2b2d42" transform="rotate(15 135 110)"/>
+        <circle cx="68" cy="105" r="7" fill="#ffffff"/>
+        <circle cx="132" cy="105" r="7" fill="#ffffff"/>
+        <ellipse cx="50" cy="125" rx="12" ry="7" fill="#ff85a1" opacity="0.6"/>
+        <ellipse cx="150" cy="125" rx="12" ry="7" fill="#ff85a1" opacity="0.6"/>
+        <polygon points="100,122 92,130 108,130" fill="#2b2d42"/>
+        <path d="M 90 138 Q 100 148 110 138" stroke="#2b2d42" stroke-width="5" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h2 class="login-title">중국어 어순 게임 🐼</h2>
+    <p class="login-sub">학번과 이름을 입력하고 판팡이와 공부해봐요!</p>
+    <input type="text" id="studentIdInput" class="login-input" placeholder="학번 (예: 10203)" inputmode="numeric" autocomplete="off">
+    <input type="text" id="studentNameInput" class="login-input" placeholder="이름 (예: 홍길동)" autocomplete="off">
+    <div id="loginError" style="color:#e63946; font-size:12px; font-weight:800; min-height:18px; margin-bottom:6px;"></div>
+    <button class="btn-start" id="startBtn">🚀 시작하기</button>
+  </div>
+
+  <!-- 메인 게임 화면 -->
+  <div class="content" id="content" style="display:none;">
+    <div class="header">
+      <div class="app-title">🐼 판팡이의 중국어 교실</div>
+      <div class="progress-badge" id="progress">1 / 12</div>
+    </div>
+
+    <div class="student-badge" id="studentBadge"></div>
+
+    <!-- 판다 캐릭터 및 말풍선 -->
+    <div class="mascot-section">
+      <div class="panda-avatar" id="pandaAvatar">
+        <svg id="pandaSvg" viewBox="0 0 200 200" width="100%" height="100%">
+          <circle cx="45" cy="55" r="30" fill="#2b2d42"/>
+          <circle cx="155" cy="55" r="30" fill="#2b2d42"/>
+          <circle cx="100" cy="115" r="75" fill="#ffffff" stroke="#2b2d42" stroke-width="6"/>
+          <ellipse cx="65" cy="110" rx="20" ry="25" fill="#2b2d42" transform="rotate(-15 65 110)"/>
+          <ellipse cx="135" cy="110" rx="20" ry="25" fill="#2b2d42" transform="rotate(15 135 110)"/>
+          <g id="pandaEyes">
+            <circle cx="68" cy="105" r="7" fill="#ffffff"/>
+            <circle cx="132" cy="105" r="7" fill="#ffffff"/>
+          </g>
+          <ellipse cx="50" cy="125" rx="12" ry="7" fill="#ff85a1" opacity="0.6"/>
+          <ellipse cx="150" cy="125" rx="12" ry="7" fill="#ff85a1" opacity="0.6"/>
+          <polygon points="100,122 92,130 108,130" fill="#2b2d42"/>
+          <path id="pandaMouth" d="M 90 138 Q 100 148 110 138" stroke="#2b2d42" stroke-width="5" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="speech-bubble" id="speechBubble">알맞은 카드 순서대로 조합해줘!</div>
+    </div>
+
+    <!-- 문제 카드 -->
+    <div class="meaning-card">
+      <div class="meaning-sub">PROBLEM</div>
+      <div class="meaning-text" id="meaningText">오랜만이야!</div>
+    </div>
+
+    <!-- 정답 입력 영역 -->
+    <div class="answer-zone" id="answerArea">
+      <span class="placeholder-text" id="placeholder">아래 카드를 터치해 단어를 완성해줘! 👇</span>
+    </div>
+
+    <!-- 단어 풀 영역 -->
+    <div class="card-pool" id="cardPool"></div>
+
+    <div class="result-msg" id="resultMsg"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-check" id="checkBtn">✅ 정답 확인</button>
+      <button class="btn btn-next" id="nextBtn" disabled>▶ 다음 문제</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== 게임 데이터 (개수 불일치 오류 수정 완전 완료) =====
+const sentences = [
+  { meaning: "오랜만이야!", tokens: ["Hǎojiǔ", "bújiàn!"], hanzi: ["好久", "不见!"] },
+  { meaning: "여름 방학 어떻게 보냈어?", tokens: ["shǔjià", "guòdé", "zěnmeyàng?"], hanzi: ["暑假", "过得", "怎么样?"] },
+  { meaning: "나는 매일 책 보고 운동하면서, 아주 잘 보냈어.", tokens: ["Wǒ", "měitiān", "kànshū、", "yùndòng，", "guòdé", "fēicháng", "hǎo."], hanzi: ["我", "每天", "看书、", "运动，", "过得", "非常", "好。"] },
+  { meaning: "오랜만이야!", tokens: ["Hǎojiǔ", "méi", "jiàn", "le!"], hanzi: ["好久", "没", "见", "了!"] },
+  { meaning: "요즘 뭐 하느라 바빠?", tokens: ["Zuìjìn", "máng", "shénme", "ne?"], hanzi: ["最近", "忙", "什么", "呢?"] },
+  { meaning: "뭐 하고 있어?", tokens: ["Zài", "gān", "má", "ne？"], hanzi: ["在", "干", "吗", "呢？"] },
+  { meaning: "밥 먹었어?", tokens: ["Chī", "le", "ma?"], hanzi: ["吃", "了", "吗?"] },
+  { meaning: "오늘 학교 친구들을 만나서 정말 기뻐!", tokens: ["Jīntiān", "jiàndào", "tóngxuémen，", "zhēn", "gāoxìng!"], hanzi: ["今天", "见到", "同学们，", "真", "高兴!"] },
+  { meaning: "나도 매우 기뻐.", tokens: ["Wǒ", "yě", "juéde", "hěn", "gāoxìng."], hanzi: ["我", "也", "觉得", "很", "高兴。"] },
+  { meaning: "이번 학기에 우리 열심히 공부하자.", tokens: ["Zhègè", "xuéqī", "wǒmen", "nǔlì", "xuéxí", "ba."], hanzi: ["这个", "学期", "我们", "努力", "学习", "吧。"] },
+  { meaning: "좋아, 우리 같이 힘내자!", tokens: ["Hǎo，", "wǒmen", "yìqǐ", "jiāyóu!"], hanzi: ["好，", "我们", "一起", "加油!"] },
+  { meaning: "판다는 많이 먹는다.", tokens: ["Xióngmāo", "chī", "de", "hěn", "duō."], hanzi: ["熊猫", "吃", "得", "很", "多。"] },
+  { meaning: "판다는 많이 먹지 않는다.", tokens: ["Xióngmāo", "chī", "de", "bù", "duō."], hanzi: ["熊猫", "吃", "得", "不", "多。"] },
+  { meaning: "나는 너희들이 해낼 수 있을 거라 믿는다.", tokens: ["Wǒ", "xiāngxìn", "nǐmen", "néng", "zuòdào."], hanzi: ["我", "相信", "你们", "能", "做到。"] },
+  { meaning: "나는 어제 너를 못 봤다.", tokens: ["Wǒ", "zuótiān", "méi", "kàndào", "nǐ."], hanzi: ["我", "昨天", "没", "看到", "你。"] },
+  { meaning: "너 무슨 동아리에 가입하고 싶어?", tokens: ["Nǐ", "xiǎng", "cānjiā", "shénme", "shètuán?"], hanzi: ["你", "想", "参加", "什么", "社团?"] },
+  { meaning: "영화동아리, 너는?", tokens: ["Diànyǐng", "shètuán,", "nǐ", "ne?"], hanzi: ["电影", "社团,", "你", "呢?"] },
+  { meaning: "음악동아리, 나는 피아노 연주하는 것을 좋아해.", tokens: ["Yīnyuè", "shètuán,", "wǒ", "xǐhuan", "tán", "gāngqín."], hanzi: ["音乐", "社团,", "我", "喜欢", "弹", "钢琴。"] },
+  { meaning: "우리 신청하러 가자.", tokens: ["Wǒmen", "qù", "bàomíng", "ba."], hanzi: ["我们", "去", "报名", "吧。"] },
+  { meaning: "음악 동아리는 당신을 환영해요!", tokens: ["Yīnyuè", "shètuán", "huānyíng", "nǐ!"], hanzi: ["音乐", "社团", "欢迎", "你!"] },
+  { meaning: "신청조건: 음악을 좋아하기만 한다면, 빨리 신청하러 오세요.", tokens: ["Bàomíng", "tiáojiàn:", "Zhǐyào", "xǐhuan", "yīnyuè,", "jiù", "kuài", "lái", "bàomíng."], hanzi: ["报名", "条件:", "只要", "喜欢", "音乐，", "就", "快", "来", "报名。"] },
+  { meaning: "신청기간: 9월 20일 부터 9월 28일까지.", tokens: ["Bàomíng", "shíjiān:", "cóng", "jiǔ", "yuè", "èrshí", "rì", "dào", "jiǔ", "yuè", "èrshíbā", "rì."], hanzi: ["报名", "时间:", "从", "九", "月", "二十", "日", "到", "九", "月", "二十八", "日."] },
+  { meaning: "저를 스캔해보세요.", tokens: ["Sǎo", "wǒ", "ba."], hanzi: ["扫", "我", "吧。"] },
+  { meaning: "우리 동아리에 가입하면, 당신의 고등학교 생활은 더욱 근사해질 거예요!", tokens: ["Jiārù", "wǒmen,", "nǐ", "de", "gāozhōng", "shēnghuó", "huì", "gèng", "jīngcǎi!"], hanzi: ["加入", "我们,", "你", "的", "高中", "生活", "会", "更", "精彩!"] },
+  { meaning: "주말에 우리 영화 보러 가자.", tokens: ["Zhōumò", "wǒmen", "qù", "kàn", "diànyǐng", "ba."], hanzi: ["周末", "我们", "去", "看", "电影", "吧。"] },
+  { meaning: "시간만 있으면, 농구 하러 간다.", tokens: ["Zhǐyào", "yǒu", "shíjiān,", "jiù", "qù", "dǎ", "lánqiú."], hanzi: ["只要", "有", "时间,", "就", "去", "打", "篮球。"] },
+  { meaning: "노력하기만 하면, 성공할 수 있다.", tokens: ["Zhǐyào", "nǔlì,", "jiù", "néng", "chénggōng."], hanzi: ["只要", "努力,", "就", "能", "成功。"] },
+  { meaning: "노력하고 열심히 공부하기만 하면, 좋은 성적을 얻을 수 있다.", tokens: ["Zhǐyào", "nǔlì", "xuéxí,", "jiù", "néng", "dé", "hǎo", "chéngjī."], hanzi: ["只要", "努力", "学习,", "就", "能", "得", "好", "成绩。"] }
+];
+
+// ===== 게임 상태 변수 =====
+let currentIndex = 0;
+let playOrder = [];
+let selectedProblems = [];
+let currentTokens = [];
+let selectedOrder = [];
+let startTime = null;
+let wrongCount = 0;
+let studentId = "";
+let studentName = "";
+const PROBLEMS_PER_GAME = 12;
+
+// ===== DOM 요소 참조 =====
+const loginScreen = document.getElementById('loginScreen');
+const studentIdInput = document.getElementById('studentIdInput');
+const studentNameInput = document.getElementById('studentNameInput');
+const loginError = document.getElementById('loginError');
+const startBtn = document.getElementById('startBtn');
+const studentBadge = document.getElementById('studentBadge');
+const meaningText = document.getElementById('meaningText');
+const cardPool = document.getElementById('cardPool');
+const answerArea = document.getElementById('answerArea');
+const resultMsg = document.getElementById('resultMsg');
+const checkBtn = document.getElementById('checkBtn');
+const nextBtn = document.getElementById('nextBtn');
+const progress = document.getElementById('progress');
+const content = document.getElementById('content');
+const speechBubble = document.getElementById('speechBubble');
+const pandaAvatar = document.getElementById('pandaAvatar');
+const pandaEyes = document.getElementById('pandaEyes');
+const pandaMouth = document.getElementById('pandaMouth');
+
+// ===== 유틸리티 함수 =====
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// undefined 방지형 특수문자 제거 함수
+function cleanWord(str){ 
+  return (str || '').replace(/[!?,.，。、？！]/g, ''); 
+}
+
+function escapeHtml(str){ 
+  const div = document.createElement('div'); 
+  div.textContent = str; 
+  return div.innerHTML; 
+}
+
+function formatTime(ms){
+  const totalSec = Math.floor(ms / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return min + "분 " + String(sec).padStart(2, "0") + "초";
+}
+
+// ===== 판다 감정 반응 =====
+function setPandaEmotion(emotion, message){
+  speechBubble.textContent = message;
+  pandaAvatar.className = "panda-avatar " + emotion;
+
+  if(emotion === 'happy'){
+    pandaEyes.innerHTML = `<path d="M 60 105 Q 68 95 76 105 M 124 105 Q 132 95 140 105" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+    pandaMouth.setAttribute('d', 'M 88 132 Q 100 155 112 132 Z');
+    pandaMouth.setAttribute('fill', '#ff85a1');
+  } else if(emotion === 'sad'){
+    pandaEyes.innerHTML = `<path d="M 62 100 L 74 110 M 74 100 L 62 110 M 126 100 L 138 110 M 138 100 L 126 110" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>`;
+    pandaMouth.setAttribute('d', 'M 90 145 Q 100 135 110 145');
+    pandaMouth.setAttribute('fill', 'none');
+  } else {
+    pandaEyes.innerHTML = `<circle cx="68" cy="105" r="7" fill="#ffffff"/><circle cx="132" cy="105" r="7" fill="#ffffff"/>`;
+    pandaMouth.setAttribute('d', 'M 90 138 Q 100 148 110 138');
+    pandaMouth.setAttribute('fill', 'none');
+  }
+}
+
+// ===== 문제 로딩 =====
+function loadSentence(idx){
+  const s = sentences[selectedProblems[playOrder[idx]]];
+  meaningText.textContent = s.meaning;
+  progress.textContent = (idx + 1) + " / " + PROBLEMS_PER_GAME;
+
+  currentTokens = s.tokens.map((t, i) => ({ 
+    text: t, 
+    hanzi: s.hanzi[i] || t, 
+    id: i 
+  }));
+  const shuffled = shuffle(currentTokens);
+
+  selectedOrder = [];
+  resultMsg.textContent = "";
+  resultMsg.className = "result-msg";
+  nextBtn.disabled = true;
+  checkBtn.disabled = false;
+  answerArea.classList.remove('shake');
+
+  setPandaEmotion('normal', '단어 카드를 눌러 순서대로 맞혀봐!');
+
+  cardPool.innerHTML = "";
+  shuffled.forEach(tok => {
+    const btn = document.createElement('button');
+    btn.className = "word-chip";
+    btn.innerHTML = `<span class="chip-hanzi">${cleanWord(tok.hanzi)}</span><span class="chip-pinyin">${cleanWord(tok.text)}</span>`;
+    btn.dataset.id = tok.id;
+    btn.addEventListener('click', () => selectCard(tok.id));
+    cardPool.appendChild(btn);
+  });
+
+  renderAnswerArea();
+}
+
+function selectCard(id){
+  if(selectedOrder.includes(id)) return;
+  selectedOrder.push(id);
+  updatePoolVisibility();
+  renderAnswerArea();
+}
+
+function deselectCard(id){
+  selectedOrder = selectedOrder.filter(x => x !== id);
+  updatePoolVisibility();
+  renderAnswerArea();
+}
+
+function updatePoolVisibility(){
+  const chips = cardPool.querySelectorAll('.word-chip');
+  chips.forEach(chip => {
+    const id = parseInt(chip.dataset.id, 10);
+    if(selectedOrder.includes(id)){
+      chip.classList.add('used');
+    } else {
+      chip.classList.remove('used');
+    }
+  });
+}
+
+function renderAnswerArea(){
+  answerArea.innerHTML = "";
+  if(selectedOrder.length === 0){
+    const ph = document.createElement('span');
+    ph.className = "placeholder-text";
+    ph.textContent = "아래 카드를 터치해 단어를 완성해줘! 👇";
+    answerArea.appendChild(ph);
+    return;
+  }
+  selectedOrder.forEach(id => {
+    const tok = currentTokens.find(t => t.id === id);
+    const btn = document.createElement('button');
+    btn.className = "word-chip";
+    btn.innerHTML = `<span class="chip-hanzi">${tok.hanzi}</span><span class="chip-pinyin">${tok.text}</span>`;
+    btn.addEventListener('click', () => deselectCard(id));
+    answerArea.appendChild(btn);
+  });
+}
+
+// ===== Web Audio 효과음 =====
+let audioCtx = null;
+function getCtx(){
+  if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+  if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
+  return audioCtx;
+}
+
+function playCorrectSound(){
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  const notes = [523.25, 659.25, 783.99, 1046.5];
+  notes.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.001, now + i * 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.2, now + i * 0.08 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.25);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now + i * 0.08);
+    osc.stop(now + i * 0.08 + 0.28);
+  });
+}
+
+function playWrongSound(){
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "sawtooth";
+  osc.frequency.setValueAtTime(280, now);
+  osc.frequency.exponentialRampToValueAtTime(110, now + 0.3);
+  gain.gain.setValueAtTime(0.15, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.35);
+}
+
+// ===== 이벤트 핸들러 =====
+checkBtn.addEventListener('click', () => {
+  const s = sentences[selectedProblems[playOrder[currentIndex]]];
+  if(selectedOrder.length !== currentTokens.length){
+    setPandaEmotion('sad', '모든 단어 카드를 올려주어야 해!');
+    resultMsg.textContent = "⚠️ 모든 카드를 배열해 주세요!";
+    resultMsg.className = "result-msg wrong";
+    return;
+  }
+
+  const isCorrect = selectedOrder.every((id, i) => id === i);
+
+  if(isCorrect){
+    playCorrectSound();
+    setPandaEmotion('happy', '대단해! 완벽한 중국어 어순이야! 🎉');
+    resultMsg.innerHTML = '✨ 答对了! (정답이에요!)';
+    resultMsg.className = "result-msg correct";
+    checkBtn.disabled = true;
+
+    if(currentIndex === PROBLEMS_PER_GAME - 1){
+      nextBtn.textContent = "🏁 결과 보기";
+      nextBtn.disabled = false;
+    } else {
+      nextBtn.disabled = false;
+    }
+  } else {
+    playWrongSound();
+    wrongCount++;
+    setPandaEmotion('sad', '아까워! 다시 한번 도전해볼까? 🥺');
+    resultMsg.textContent = "❌ 再试一次! (다시 시도해 보세요)";
+    resultMsg.className = "result-msg wrong";
+    answerArea.classList.add('shake');
+    setTimeout(() => {
+      answerArea.classList.remove('shake');
+      selectedOrder = [];
+      updatePoolVisibility();
+      renderAnswerArea();
+    }, 500);
+  }
+});
+
+nextBtn.addEventListener('click', () => {
+  if(currentIndex < PROBLEMS_PER_GAME - 1){
+    currentIndex++;
+    loadSentence(currentIndex);
+  } else {
+    showClearScreen();
+  }
+});
+
+function showClearScreen(){
+  const elapsedMs = Date.now() - startTime;
+  const timeStr = formatTime(elapsedMs);
+
+  let rating = "👍 멋져요! 끝까지 해냈군요!";
+  if(wrongCount === 0){
+    rating = "🏆 Perfect! 중국어 어순 달인!";
+  } else if(wrongCount <= 2){
+    rating = "⭐ Great! 훌륭한 실력이네요!";
+  } else if(wrongCount >= 8){
+    rating = "💪 힘내요! 조금만 더 연습해볼까요?";
+  }
+
+  content.innerHTML = `
+    <div class="screen-card">
+      <div style="font-size: 50px; margin-bottom: 6px;">🎊🐼🎊</div>
+      <h2 style="color: var(--purple-main); margin: 0 0 6px;">모든 문제 완료!</h2>
+      <div class="student-badge">👤 ${escapeHtml(studentId)} · ${escapeHtml(studentName)}</div>
+      
+      <div class="summary-card">
+        <div class="summary-row">
+          <span>⏱ 총 소요 시간</span>
+          <span>${timeStr}</span>
+        </div>
+        <div class="summary-row">
+          <span>📝 풀어낸 문장</span>
+          <span>${PROBLEMS_PER_GAME} 문장</span>
+        </div>
+        <div class="summary-row">
+          <span>❌ 실수한 횟수</span>
+          <span>${wrongCount} 회</span>
+        </div>
+        <div class="rating-badge">${rating}</div>
+      </div>
+
+      <div style="background: #e0f2fe; border-radius: 16px; padding: 12px; margin: 12px 0; text-align: center;">
+        <p style="color: #0284c7; font-size: 13px; font-weight: 800; margin: 0;">📸 멋진 결과 화면을 캡처해서 선생님께 보여주세요!</p>
+      </div>
+
+      <button class="btn-restart" id="restartBtn">🔄 다시 도전하기</button>
+    </div>
+  `;
+
+  document.getElementById('restartBtn').addEventListener('click', () => location.reload());
+}
+
+// ===== 게임 시작 =====
+function startGame(){
+  const idVal = studentIdInput.value.trim();
+  const nameVal = studentNameInput.value.trim();
+
+  if(!idVal || !nameVal){
+    loginError.textContent = "학번과 이름을 입력해주세요!";
+    return;
+  }
+
+  studentId = idVal;
+  studentName = nameVal;
+  loginError.textContent = "";
+
+  try { getCtx(); } catch(e){}
+
+  if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+
+  loginScreen.style.display = "none";
+  content.style.display = "block";
+  studentBadge.textContent = `👤 ${studentId} · ${studentName}`;
+
+  window.scrollTo(0, 0);
+  startTime = Date.now();
+  currentIndex = 0;
+  wrongCount = 0;
+
+  const allProblemIndices = sentences.map((_, i) => i);
+  selectedProblems = shuffle(allProblemIndices).slice(0, PROBLEMS_PER_GAME);
+  playOrder = shuffle(selectedProblems.map((_, i) => i));
+
+  loadSentence(currentIndex);
+}
+
+let touchHandled = false;
+startBtn.addEventListener('touchstart', (e) => { e.preventDefault(); }, { passive: false });
+startBtn.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  touchHandled = true;
+  startGame();
+  setTimeout(() => { touchHandled = false; }, 600);
+}, { passive: false });
+
+startBtn.addEventListener('click', () => {
+  if(touchHandled) return;
+  startGame();
+});
+
+studentNameInput.addEventListener('keydown', e => { if(e.key === 'Enter') startGame(); });
+</script>
+</body>
+</html>
